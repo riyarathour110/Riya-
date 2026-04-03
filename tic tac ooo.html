@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tic Tac Toe — Single File</title>
+    <style>
+        :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --accent: #7c3aed;
+            --muted: #94a3b8;
+            --win: #16a34a;
+            --size: clamp(260px, 40vmin, 420px);
+            font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #061021 0%, #07122b 100%);
+            color: #e6eef8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        .card {
+            width: var(--size);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 30px rgba(2, 6, 23, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px
+        }
+
+        h1 {
+            font-size: 1.15rem;
+            margin: 0
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 0.85rem
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .cell {
+            aspect-ratio: 1/1;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.00));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(36px, 8vmin, 64px);
+            cursor: pointer;
+            border-radius: 10px;
+            user-select: none;
+            transition: transform .12s ease, box-shadow .12s ease;
+            box-shadow: inset 0 -6px 18px rgba(2, 6, 23, 0.35);
+        }
+
+        .cell:hover {
+            transform: translateY(-3px)
+        }
+
+        .cell.disabled {
+            cursor: default;
+            opacity: 0.9
+        }
+
+        .x {
+            color: #f97316;
+            font-weight: 700
+        }
+
+        .o {
+            color: #60a5fa;
+            font-weight: 700
+        }
+
+        .info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px
+        }
+
+        .controls {
+            display: flex;
+            gap: 8px
+        }
+
+        button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 8px 12px;
+            border-radius: 10px;
+            color: inherit;
+            cursor: pointer
+        }
+
+        button.primary {
+            background: linear-gradient(90deg, var(--accent), #5eead4);
+            color: #021025;
+            border: none
+        }
+
+        .status {
+            margin-top: 8px;
+            font-weight: 600
+        }
+
+        .score {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px
+        }
+
+        .score .s {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem
+        }
+
+        .win-line {
+            position: relative
+        }
+
+        .highlight {
+            box-shadow: 0 6px 18px rgba(124, 58, 237, 0.16);
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 14px
+        }
+
+        .small {
+            font-size: 0.78rem;
+            color: var(--muted)
+        }
+
+        @media (max-width:420px) {
+            .card {
+                padding: 14px
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <main class="card" role="application" aria-label="Tic tac toe game">
+        <header>
+            <div>
+                <h1>Tic Tac Toe</h1>
+                <div class="muted">Classic 3×3 — Local two-player</div>
+            </div>
+            <div class="controls">
+                <button id="newGameBtn" title="Restart (keep scores)">Restart</button>
+                <button id="resetScoreBtn" title="Clear scores">Reset Scores</button>
+            </div>
+        </header>
+
+        <section class="info">
+            <div class="status" id="status">Turn: <span id="turn">X</span></div>
+            <div class="muted">Click a cell to play</div>
+        </section>
+
+        <div class="board" id="board" role="grid" aria-label="Tic tac toe board">
+            <!-- 9 cells inserted by JS -->
+        </div>
+
+        <div class="score" aria-live="polite">
+            <div class="s">X: <span id="scoreX">0</span></div>
+            <div class="s">O: <span id="scoreO">0</span></div>
+            <div class="s">Draws: <span id="scoreD">0</span></div>
+        </div>
+
+        <footer>
+            <div class="small">Built with ❤ — single-file HTML/CSS/JS</div>
+            <div class="small">Tip: press R to restart</div>
+        </footer>
+    </main>
+
+    <script>
+        // Game state
+        const boardEl = document.getElementById('board');
+        const statusEl = document.getElementById('status');
+        const turnEl = document.getElementById('turn');
+        const scoreXEl = document.getElementById('scoreX');
+        const scoreOEl = document.getElementById('scoreO');
+        const scoreDEl = document.getElementById('scoreD');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const resetScoreBtn = document.getElementById('resetScoreBtn');
+
+        let cells = Array(9).fill(null); // 'X' or 'O' or null
+        let turn = 'X';
+        let gameOver = false;
+        const scores = { X: 0, O: 0, D: 0 };
+
+        const winningLines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+
+        // create cells
+        function createBoard() {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'cell';
+                btn.setAttribute('data-index', i);
+                btn.setAttribute('aria-label', Cell ${ i+ 1});
+            btn.addEventListener('click', onCellClick);
+            btn.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') onCellClick.call(btn, e);
+            });
+            boardEl.appendChild(btn);
+        }
+        updateUI();
+    }
+
+        function onCellClick(e) {
+            if (gameOver) return;
+            const i = Number(this.getAttribute('data-index'));
+            if (cells[i]) return; // occupied
+            cells[i] = turn;
+            renderCell(i);
+            const result = checkWin();
+            if (result) {
+                handleWin(result);
+                return;
+            }
+            if (cells.every(c => c !== null)) {
+                handleDraw();
+                return;
+            }
+            turn = turn === 'X' ? 'O' : 'X';
+            updateUI();
+        }
+
+        function renderCell(i) {
+            const btn = boardEl.querySelector([data - index='${i}']);
+            btn.textContent = cells[i];
+            btn.classList.add(cells[i] === 'X' ? 'x' : 'o');
+            btn.classList.add('disabled');
+        }
+
+        function updateUI() {
+            turnEl.textContent = turn;
+            boardEl.querySelectorAll('.cell').forEach((c, idx) => {
+                if (!cells[idx]) c.classList.remove('x', 'o', 'disabled');
+            });
+        }
+
+        function checkWin() {
+            for (const line of winningLines) {
+                const [a, b, c] = line;
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    return { winner: cells[a], line };
+                }
+            }
+            return null;
+        }
+
+        function handleWin({ winner, line }) {
+            gameOver = true;
+            // highlight winning cells
+            for (const i of line) {
+                const btn = boardEl.querySelector([data - index='${i}']);
+                btn.classList.add('highlight');
+                btn.style.boxShadow = '0 10px 30px rgba(22,163,74,0.12)';
+            }
+            statusEl.textContent = Winner: ${ winner };
+            scores[winner]++;
+            updateScores();
+        }
+
+        function handleDraw() {
+            gameOver = true;
+            statusEl.textContent = 'Draw!';
+            scores.D++;
+            updateScores();
+        }
+
+        function updateScores() {
+            scoreXEl.textContent = scores.X;
+            scoreOEl.textContent = scores.O;
+            scoreDEl.textContent = scores.D;
+        }
+
+        function restart(keepScores = true) {
+            cells = Array(9).fill(null);
+            turn = 'X';
+            gameOver = false;
+            boardEl.querySelectorAll('.cell').forEach(c => { c.textContent = ''; c.className = 'cell'; c.style.boxShadow = ''; });
+            statusEl.textContent = 'Turn: ';
+            turnEl.textContent = turn;
+            if (!keepScores) { scores.X = scores.O = scores.D = 0; updateScores(); }
+        }
+
+        // keyboard shortcuts
+        window.addEventListener('keydown', e => {
+            if (e.key.toLowerCase() === 'r') restart(true);
+        });
+
+        // wire buttons
+        newGameBtn.addEventListener('click', () => restart(true));
+        resetScoreBtn.addEventListener('click', () => restart(false));
+
+        // initialize
+        createBoard();
+        updateScores();
+    </script>
+</body>
+
+</html>
